@@ -5,7 +5,11 @@ import joblib
 import numpy as np
 from datetime import datetime, timedelta
 from sklearn.linear_model import LinearRegression
-
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    st.error("🔧 'matplotlib' not found. Please add it to requirements.txt and redeploy.")
+    st.stop()
 st.set_page_config(page_title="Solar Site Diagnostic App", layout="wide")
 st.title("⚡ Solar Site Anomaly Detection & Forecast Dashboard")
 
