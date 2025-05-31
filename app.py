@@ -1,34 +1,28 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import matplotlib.pyplot as plt
 import joblib
+import numpy as np
 from datetime import datetime, timedelta
 from sklearn.linear_model import LinearRegression
 
-# Safe import of matplotlib
-try:
-    import matplotlib.pyplot as plt
-except ModuleNotFoundError:
-    st.error("❌ Required package 'matplotlib' is missing. Please add it to `requirements.txt` and redeploy.")
-    st.stop()
-
-# Streamlit config
+# Streamlit settings
 st.set_page_config(page_title="Solar Site Diagnostic App", layout="wide")
 st.title("⚡ Solar Site Anomaly Detection & Forecast Dashboard")
 
 st.markdown("""
-This dashboard detects anomalies in Power Factor (PF_avg) using a pre-trained Random Forest model, 
+This dashboard detects anomalies in Power Factor (PF_avg) using a pre-trained Random Forest model,
 and forecasts future PF_avg values using a time-series regression model.
 """)
 
-# Load trained classifier model
+# Load pre-trained classifier model
 @st.cache_resource
 def load_model():
     return joblib.load("best_pf_anomaly_model_RandomForest.joblib")
 
 clf = load_model()
 
-# Generate synthetic data
+# Simulate and generate data
 def generate_data(n_samples=300):
     np.random.seed(42)
     pf = np.random.normal(loc=1.0, scale=0.01, size=n_samples)
@@ -43,11 +37,11 @@ def generate_data(n_samples=300):
 
 df_metrics = generate_data()
 
-# Predict anomalies
+# Predict anomalies using trained model
 X = df_metrics[['PF_avg', 'VAR_avg']]
 df_metrics['is_anomaly'] = clf.predict(X)
 
-# Forecast PF_avg using Linear Regression
+# Forecast future PF_avg values using Linear Regression
 def forecast_pf(data, steps=24):
     data = data.copy()
     data['hour'] = np.arange(len(data))
@@ -60,7 +54,7 @@ def forecast_pf(data, steps=24):
 
 forecast_df = forecast_pf(df_metrics)
 
-# Plot detected anomalies
+# Plot anomalies
 st.subheader("📉 Detected Anomalies in Power Factor")
 fig1, ax1 = plt.subplots(figsize=(10, 4))
 ax1.plot(df_metrics['timestamp'], df_metrics['PF_avg'], label='PF_avg', color='blue', alpha=0.6)
@@ -86,6 +80,6 @@ ax2.set_title("24-Hour PF_avg Forecast")
 ax2.legend()
 st.pyplot(fig2)
 
-# Display anomaly snapshot
+# Show snapshot
 st.subheader("🧾 Anomaly Snapshot")
 st.dataframe(df_metrics[df_metrics['is_anomaly'] == 1][['timestamp', 'PF_avg', 'VAR_avg']].head(20))
